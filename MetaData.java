@@ -1,4 +1,3 @@
-//TODO string.matches("regex")
 
 public class MetaData{
 	private String description, keywords;
