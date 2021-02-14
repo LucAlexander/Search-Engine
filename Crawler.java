@@ -8,11 +8,10 @@ import java.util.*;
 
 public class Crawler{
 	private boolean good;
-	int fileCount;
-	// Seed Links
-	HashSet<String> seeds = new HashSet<String>();
-	HashSet<String> keywords = new HashSet<String>();
-	// <link, meta description>
+	String seed;
+	// page limiting
+	int pageLimit;
+	// <link, filename>
 	Hashtable<String, String> crawledPages = new Hashtable<String, String>();
 	public static void main(String[] args){
 		/*	 _______________
@@ -23,14 +22,15 @@ public class Crawler{
 		 *	|_______________|
 		*/
 		try{
-			Crawler charlotte = new Crawler();
+			Crawler charlotte = new Crawler("https://www.chessvariants.com/",1000);
 			if (charlotte.isGood()){
 				System.out.println("Charlotte is good");
-				Hashtable<String, String> query = charlotte.start("news about peaches", 1);
+				Hashtable<String, String> query = charlotte.start(2);
 				Set<String> keys = query.keySet();
 				for (String i : keys){
-					System.out.printf("Webpage: %s\n",i);
+					System.out.printf("Webpage: %s : %s\n",query.get(i),i);
 				}
+				System.out.println(query.size());
 			}
 			else{
 				System.out.println("Charlotte is not good");
@@ -40,160 +40,73 @@ public class Crawler{
 			e.printStackTrace();
 		}
 	}
-	Crawler() throws IOException{
+	Crawler(String seedUrl, int PageLimit) throws IOException{
 		// default parameters
 		this.good = false;
-		fileCount = 0;
-		// read in seed urls
-		try(
-			BufferedReader file = new BufferedReader(new FileReader("seeds.txt"));
-		){
-			String buffer;
-			while((buffer=file.readLine())!=null){
-				String newSeed = buffer.trim();
-				if (!isUrlValid(newSeed)){
-					String secure = "https://"+newSeed;
-					if (!isUrlValid(secure)){
-						newSeed = "http://"+newSeed;
-					}
-					else{
-						newSeed = secure;
-					}
-				}
-				if (isUrlValid(newSeed)){
-					seeds.add(newSeed);
-				}
+		pageLimit = PageLimit;
+		seed = seedUrl;
+		try {
+			if (isUrlValid(seed)){
+				good = true;
 			}
-			this.good = true;
-			file.close();
+			else{
+				good = false;
+			}
+
 		}
 		catch(Exception e){
-			// setup failed
-			this.good = false;
-			e.printStackTrace();
+			good = false;
 		}
 	}
 	public boolean isGood(){
 		// returns if web crawler setup was a success
 		return this.good;
 	}
-	public Hashtable<String, String> start(String query, int depth){
-		// reset query variables and retrieve keywords from curretn querry
-		reset();
-		getKeywords(query);
-		// crawl seed urls
-		for (String i : seeds){
-			crawlPage(i, depth, getMetaData(i));
-			System.out.print(".");
-		}
-		Set<String> keys = crawledPages.keySet();
-		try{
-			for (String i : keys){
-				//downloadPage(crawledPages.get(i), i);
-			}
-			return crawledPages;
-		}
-		catch(Exception e){
-			e.printStackTrace();
-			return null;
-		}
+	public Hashtable<String, String> start(int depth){
+		// crawl seed url
+		crawlPage(seed, depth);
+		return crawledPages;
 	}
-	public void getKeywords(String query){
-		// split query string into words
-		// parse words into unique set
-		String[] list = parseKeywords(query);
-		for (int i = 0;i<list.length;++i){
-			String temp = list[i];
-			keywords.add(temp);
-		}
-	}
-	public void crawlPage(String url, int depth, MetaData meta){
+	public void crawlPage(String url, int depth){
 		/* Recursive crawling algorithm for web links
 		 * String url: url of current page to scan
 		 * int depth: the depth of search to continue
 		*/
-		try{
-			if (depth > 0){
-				depth --;
-				// retrieve sublinks
-				Elements links = getLinks(url);
-				// parse through all links
-				for (Element i : links){
-					String tempUrl = i.absUrl("href");
-					tempUrl = parseUrl(tempUrl, url);
-					MetaData md = getMetaData(tempUrl);
-					if (md != null){
-						// scan for keyword matches
-						if (compareKeywords(md, i)){
-							crawlPage(tempUrl, depth, md);
+		if (crawledPages.size() < pageLimit){
+			if (!crawledPages.containsKey(url)){
+				try{
+					String name;
+					name = downloadPage(url);
+					//name = String.valueOf(crawledPages.size());
+					crawledPages.put(url, name);
+					if (depth > 0){
+						depth --;
+						// retrieve sublinks
+						Elements links = getLinks(url);
+						// parse through all links
+						for (Element i : links){
+							String tempUrl = i.absUrl("href");
+							crawlPage(tempUrl, depth);
 						}
 					}
 				}
+				catch(Exception e){
+					//Skip over non workable link
+				}
 			}
 		}
-		catch(Exception e){
-			//Skip over non workable link
-		}
-		// add metadata description and url to final list of pages
-		crawledPages.put(url, meta.getDescription());
 	}
-	private boolean compareKeywords(MetaData md, Element link){
-		// check for keyword matches in link data
-		String content = md.getKeywords();
-		content += md.getDescription();
-		content += link.text();
-		return (containsKeywords(content));
-	}
-	private String parseUrl(String u, String base){
-		// returns whether a url string 'u' is relevant
-		// returns null if url is same page as base 
-		if (u.startsWith(base)){
-			String work = u.substring(0, base.length());
-			if (work.startsWith("#")||work.startsWith("javascript:")){
-				return null;
-			}
-		}
-		return u;
-	}
-	private String[] parseKeywords(String list){
-		/* Use regex to serparate querry into significant keywords
-		 * excludes "stop words"
-		*/
-		list = list.toLowerCase();
-		String reg = "(\\.|,|:|;|!|\\?|)?\\s((is|to|if|it|and|the|where|how|what|or|i|a)(((\\.|,|:|;|!|\\?|)?\\s)))?";
-		String[] parsed = list.split(reg);
-		return parsed;
-	}
-	private boolean containsKeywords(String list){
-		// returns true if there is overlap between the given list and the set of keywords
-		String[] a = keywords.toArray(new String[keywords.size()]);
-		for (int i = 0;i>a.length;++i){
-			if (list.contains(a[i])){
-				return true;
-			}
-		}
-		return false;
-	}
-	public void reset(){
-		// reset query sepcific variables
-		crawledPages.clear();
-		keywords.clear();
-		fileCount = 0;
-	}
-	private boolean downloadPage(String u, String fileName) throws IOException{
+	private String downloadPage(String u) throws IOException{
 		/* Downloads the source code for a given string to an html file within the directory
 		 * String u: the url for the page to retrieve sources code
-		 * Returns boolean wheather or not the download was successful
+		 * Returns file name of downloaded file
 		*/
 		URL url = new URL(u);
-		if (fileName.length() > 128){
-			fileName = fileName.substring(0, 128);
-		}
+		String n = "page"+String.valueOf(crawledPages.size());
 		try(
 			BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
-			BufferedWriter writer = new BufferedWriter(new FileWriter("page"+String.valueOf(fileCount)+".html"));
+			BufferedWriter writer = new BufferedWriter(new FileWriter("./pages/"+n+".html"));
 		){
-			fileCount++;
 			String insertLine = "<base href=\"";
 			insertLine += u;
 			insertLine += "\">";
@@ -221,11 +134,11 @@ public class Crawler{
 			}
 			reader.close();
 			writer.close();
-			return true;
+			return n+".html";
 		}
 		catch(Exception e){
 			e.printStackTrace();
-			return false;
+			return null;
 		}
 	}
 	private Elements getLinks(String url){
