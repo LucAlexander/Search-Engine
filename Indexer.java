@@ -1,6 +1,7 @@
 import java.util.*;
 import java.util.regex.*;
 import java.io.*;
+import java.net.*;
 import org.jsoup.*;
 import org.jsoup.Jsoup;
 import org.jsoup.select.*;
@@ -8,7 +9,7 @@ import org.jsoup.nodes.*;
 
 public class Indexer{
 	String fileDirectory;
-	// map<pair<url, file>, map<word, count>>
+	// map<filename, document(HashMap<Term(stemmed word, id), count>)>
 	HashMap<String, IndexedDoc> index = new HashMap<String, IndexedDoc>();
 	String schema;
 	Pattern pattern;
@@ -17,6 +18,13 @@ public class Indexer{
 		// Temporary entrypoint
 		Indexer dexter = new Indexer();
 		dexter.start();
+		System.out.print("Enter any url to add to index: ");
+		Scanner scan = new Scanner(System.in);
+		String u = scan.nextLine();
+		scan.close();
+		dexter.addIndex(u);
+		System.out.println("Done");
+		dexter.close();
 		System.out.println("Program exited with code 0\n");
 	}
 	Indexer(){
@@ -26,17 +34,23 @@ public class Indexer{
 		pattern = Pattern.compile(schema);
 		stemmer = new Stemmer();
 	}
-	private void start(){
+	public void start(){
+		// generates or reads from existing reverse index file
+		boolean readFromFile = readFromIndex();
+		if (!readFromFile){	
+			for (int i = 0;i<1000;++i){
+				String file = "../crawler/pages/page"+i+".html";
+				addFile(file);
+			}
+		}
+	}
+	public void close(){
 		// Creates a reverse-index file containing entries in the format:
 		// pagename.html | {word : count} {word : count} ... \n
 		try(
 			BufferedWriter writer = new BufferedWriter(new FileWriter("reverseIndex.txt"));
 		){
-			// tokenize and store information about each file	
-			for (int i = 0;i<1000;++i){
-				String file = "../crawler/pages/page"+i+".html";
-				addFile(file);
-			}
+			// tokenize and store information about each file
 			// Serialize content of index map into file
 			for (Map.Entry<String, IndexedDoc> set : index.entrySet()){
 				String line = "";
@@ -178,6 +192,90 @@ public class Indexer{
 			// store data from file
 			index.put(file, new IndexedDoc(rCount));
 			reader.close();
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+	private boolean readFromIndex(){
+		// reads a precreated reverse index from saved file
+		String file = "./reverseIndex.txt";
+		File reverseIndex = new File(file);
+		if (reverseIndex.exists()){
+			try(
+				BufferedReader reader = new BufferedReader(new FileReader(file));
+			){
+				String readSchema = "(\\{[^\\}]+)";
+				Pattern readPattern = Pattern.compile(readSchema);
+				String line;
+				while ((line = reader.readLine()) != null){
+					int iden = 0;
+					String[] pair = line.split(" \\| ");
+					String fileName = pair[0];
+					String tokenList;
+				        if (pair.length > 1){
+						tokenList = pair[1];
+					}
+					else{
+						tokenList = "";
+					}
+					HashMap<Term, Integer> tempMap = new HashMap<Term, Integer>();
+					Matcher readMatcher = readPattern.matcher(tokenList);
+					String[] readResults = readMatcher.results().map(MatchResult::group).toArray(String[]::new);
+					for (int i = 0;i<readResults.length;++i){
+						String[] valuePair = readResults[i].split(" : ");
+						String term = valuePair[0];
+						Term temp = new Term(term.substring(1),iden);
+						iden++;
+						tempMap.put(temp, Integer.parseInt(valuePair[1]));
+					}
+					index.put(fileName, new IndexedDoc(tempMap));
+				}
+			}
+			catch(Exception e){
+				e.printStackTrace();
+			}
+			return true;
+		}
+		return false;
+	}
+	public void addIndex(String u){
+		// downloads and indexes a page from a url
+		// download
+		try{
+			URL url = new URL(u);
+			String n = "../crawler/pages/page"+String.valueOf(index.size())+".html";
+			BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
+			BufferedWriter writer = new BufferedWriter(new FileWriter(n));
+			String insertLine = "<base href=\"";
+			insertLine += u;
+			insertLine += "\">";
+			String line;
+			boolean inserted = false;
+			while ((line = reader.readLine())!=null){
+				if (!inserted){
+					if (line.contains("</head")&&line.contains(">")){
+						inserted =true;
+						writer.write(line);
+						writer.write(insertLine);
+					}
+					else if (line.contains("<body")){
+						inserted = true;
+						writer.write("<head>"+insertLine+"</head>");
+						writer.write(line);
+					}
+					else{
+						writer.write(line);
+					}
+				}
+				else{
+					writer.write(line);
+				}
+			}
+			reader.close();
+			writer.close();
+			// add to current index
+			addFile(n);
 		}
 		catch(Exception e){
 			e.printStackTrace();
