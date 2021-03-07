@@ -1,6 +1,8 @@
+package indexer;
 import java.util.*;
 
 public class IndexedDoc{
+	// term, term count
 	HashMap<Term, Integer> contents;
 	public IndexedDoc(HashMap<Term, Integer> c){
 		contents = c;
@@ -22,7 +24,7 @@ public class IndexedDoc{
 		// number of times a term t occurs in the document
 		int freq = 0;
 		for (Map.Entry<Term, Integer> set : contents.entrySet()){
-			if (set.getKey().getStem() == t.getStem()){
+			if (set.getKey().getStem().equals(t.getStem())){
 				freq++;
 			}
 		}
@@ -31,7 +33,7 @@ public class IndexedDoc{
 	public boolean containsTerm(Term t){
 		// if the document contains term t
 		for (Map.Entry<Term, Integer> set : contents.entrySet()){
-			if (set.getKey().getStem() == t.getStem()){
+			if (set.getKey().getStem().equals(t.getStem())){
 				return true;
 			}
 		}

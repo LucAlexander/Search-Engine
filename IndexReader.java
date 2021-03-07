@@ -1,3 +1,4 @@
+package indexer;
 import java.util.*;
 import java.util.regex.*;
 import java.io.*;
@@ -18,16 +19,10 @@ public class IndexReader{
 		// Temporary entrypoint
 		IndexReader dexter = new IndexReader();
 		dexter.start();
-		System.out.print("Enter any url to add to index: ");
-		Scanner scan = new Scanner(System.in);
-		String u = scan.nextLine();
-		scan.close();
-		dexter.addIndex(u);
-		System.out.println("Done");
 		dexter.close();
 		System.out.println("Program exited with code 0\n");
 	}
-	IndexReader(){
+	public IndexReader(){
 		// Initialize indexer
 		// regex scheme to tokenize text and remove stop words
 		schema = "\\b(?!(is|to|if|it|and|the|where|how|what|or|i|a)\\s)\\b[A-Za-z0-9_]+";
@@ -69,6 +64,9 @@ public class IndexReader{
 			e.printStackTrace();
 		}
 	}
+	public HashMap<String, IndexedDoc> getMap(){
+		return index;
+	}
 	public int getDocLength(String fileName){
 		//returns the amount of unique terms in a document
 		for (Map.Entry<String, IndexedDoc> set : index.entrySet()){
@@ -97,6 +95,13 @@ public class IndexReader{
 			}
 		}
 		return freq;
+	}
+	public double getAvgDocLength(){
+		double sum = 0;
+		for (Map.Entry<String, IndexedDoc> set : index.entrySet()){
+			sum += set.getValue().getLength();
+		}
+		return sum/((double)getDocCount());
 	}
 	public int getDocCount(){
 		// returns the number of documents in our index
@@ -130,8 +135,9 @@ public class IndexReader{
 		/* Stemms the given word
 		 * returns the root of the word, or the word if no further root exists
 		*/
+		String lword = word.toLowerCase();
 		for (int i = 0;i<word.length();++i){
-			stemmer.add(word.charAt(i));
+			stemmer.add(lword.charAt(i));
 		}
 		stemmer.stem();
 		return stemmer.toString();
