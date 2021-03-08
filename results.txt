@@ -1,0 +1,53 @@
+MAX RESULT SIZE: 20
+
+Analysis:
+BM25 returned more accurate results at the top of the results page, 
+however TFIDF was able to stay more relevant for longer, 
+with the least relevant results being consistantly more relevant than BM25
+
+
+IDFTF Results:
+../crawler/pages/page200.html | 2.795034
+../crawler/pages/page255.html | 2.795034
+../crawler/pages/page249.html | 2.795034
+../crawler/pages/page252.html | 2.795034
+../crawler/pages/page253.html | 2.795034
+../crawler/pages/page251.html | 2.795034
+../crawler/pages/page254.html | 2.795034
+../crawler/pages/page250.html | 2.795034
+../crawler/pages/page263.html | 2.254579
+../crawler/pages/page227.html | 2.190686
+../crawler/pages/page371.html | 2.138814
+../crawler/pages/page164.html | 2.071796
+../crawler/pages/page167.html | 1.956765
+../crawler/pages/page264.html | 1.790432
+../crawler/pages/page261.html | 1.789926
+../crawler/pages/page9.html | 1.771415
+../crawler/pages/page262.html | 1.771074
+../crawler/pages/page176.html | 1.732258
+../crawler/pages/page0.html | 1.732258
+../crawler/pages/page265.html | 1.561083
+Program terminated with exit code 0
+
+
+MB25 Results:
+../crawler/pages/page227.html | 16.593470
+../crawler/pages/page200.html | 14.140023
+../crawler/pages/page255.html | 14.140023
+../crawler/pages/page249.html | 14.140023
+../crawler/pages/page252.html | 14.140023
+../crawler/pages/page253.html | 14.140023
+../crawler/pages/page251.html | 14.140023
+../crawler/pages/page254.html | 14.140023
+../crawler/pages/page250.html | 14.140023
+../crawler/pages/page801.html | 12.209029
+../crawler/pages/page233.html | 11.839706
+../crawler/pages/page922.html | 11.728476
+../crawler/pages/page97.html | 11.646932
+../crawler/pages/page76.html | 11.602891
+../crawler/pages/page80.html | 11.508805
+../crawler/pages/page802.html | 11.264675
+../crawler/pages/page475.html | 11.160740
+../crawler/pages/page398.html | 10.701214
+../crawler/pages/page229.html | 10.601062
+../crawler/pages/page263.html | 10.461301
