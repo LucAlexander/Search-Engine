@@ -6,7 +6,7 @@ however TFIDF was able to stay more relevant for longer,
 with the least relevant results being consistantly more relevant than BM25
 
 
-IDFTF Results:
+TFIDF Results:
 ../crawler/pages/page200.html | 2.795034
 ../crawler/pages/page255.html | 2.795034
 ../crawler/pages/page249.html | 2.795034
@@ -27,6 +27,29 @@ IDFTF Results:
 ../crawler/pages/page176.html | 1.732258
 ../crawler/pages/page0.html | 1.732258
 ../crawler/pages/page265.html | 1.561083
+Program terminated with exit code 0
+
+TFIDF Cosine Similarity Results:
+../crawler/pages/page167.html | 0.184972
+../crawler/pages/page164.html | 0.174908
+../crawler/pages/page371.html | 0.148592
+../crawler/pages/page200.html | 0.103731
+../crawler/pages/page255.html | 0.103731
+../crawler/pages/page249.html | 0.103731
+../crawler/pages/page252.html | 0.103731
+../crawler/pages/page253.html | 0.103731
+../crawler/pages/page251.html | 0.103731
+../crawler/pages/page254.html | 0.103731
+../crawler/pages/page250.html | 0.103731
+../crawler/pages/page176.html | 0.084346
+../crawler/pages/page0.html | 0.084346
+../crawler/pages/page261.html | 0.074262
+../crawler/pages/page9.html | 0.072578
+../crawler/pages/page263.html | 0.072479
+../crawler/pages/page264.html | 0.066959
+../crawler/pages/page262.html | 0.066065
+../crawler/pages/page265.html | 0.064510
+../crawler/pages/page772.html | 0.063522
 Program terminated with exit code 0
 
 
