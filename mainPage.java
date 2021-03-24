@@ -5,14 +5,18 @@ import javafx.scene.Scene;
 import javafx.scene.text.*;
 import javafx.scene.control.Button;
 import javafx.stage.Stage;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.paint.Color;
+import javafx.scene.paint.*;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.web.WebView;
 import javafx.scene.web.WebEngine;
 import javafx.scene.control.ListView;
+import javafx.geometry.*;
+import javafx.scene.Group;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;  
 
 import org.jsoup.*;
 import org.jsoup.Jsoup;
@@ -22,6 +26,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.*;
 
 import java.io.File;
+import java.io.FileInputStream; 
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
 
@@ -31,12 +36,24 @@ public class mainPage extends Application{
 	final int height=600;
 	Button search;
 	TextField querry;
+	Image logo;
+	Background background;
 	BM25 engine;
 	Vector<SimpleEntry<String, Double>> resultsList;
 	@Override
 	public void start(Stage window){
 		window.setTitle("Chess Variant Search");
+		try{
+			logo = new Image(new FileInputStream("variantPiece.png"));
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		ImageView iv = new ImageView(logo);
+		iv.setFitHeight(100);
+		iv.setPreserveRatio(true);
 		querry = new TextField();
+		querry.setMinWidth(400);
 		search = new Button();
 		search.setText("Search");
 		search.setOnAction(e->{
@@ -46,10 +63,17 @@ public class mainPage extends Application{
 				window.setScene(results);
 			}
 		});
-		VBox vb = new VBox(20, querry, search);
+		BackgroundFill bf = new BackgroundFill(Color.BEIGE, CornerRadii.EMPTY , Insets.EMPTY);
+		background = new Background(bf);
+		HBox hb = new HBox();
+		hb.setAlignment(Pos.CENTER);
+		hb.getChildren().addAll(querry, search);
+		VBox vb = new VBox();
+		vb.setAlignment(Pos.CENTER);
+		vb.getChildren().addAll(iv, hb);
+		vb.setBackground(background);
 		main = new Scene(vb, width, height);
-		VBox layout = new VBox(20);
-		results = new Scene(layout, window.getWidth(), window.getHeight());
+		results = new Scene(new VBox(), window.getWidth(), window.getHeight());
 		window.setScene(main);
 		window.show();
 		engine = new BM25();
@@ -99,9 +123,11 @@ public class mainPage extends Application{
 				window.setScene(page);
 			});
 			TextFlow f = new TextFlow(h);
+			f.setStyle("-fx-font: 12 arial;");
 			listView.getItems().add(f);
 		}
 		layout.getChildren().addAll(back, listView);
+		layout.setBackground(background);
 		results = new Scene(layout, window.getWidth(), window.getHeight());
 	}
 	public void setPageContents(String htmlContent, Stage window){
